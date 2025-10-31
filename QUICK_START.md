@@ -5,36 +5,34 @@
 - ✅ Repository created: https://github.com/subasico/portfolioanalyzerbackend
 - ✅ Code pushed to GitHub
 - ✅ Configured to use GitHub Container Registry (GHCR)
-- ✅ GitHub secrets already set: AKS_CLUSTER_NAME, AKS_RESOURCE_GROUP, AZURE_CLIENT_SECRET
+- ✅ GitHub secrets already set:
+  - AKS_CLUSTER_NAME
+  - AKS_RESOURCE_GROUP
+  - AZURE_CLIENT_SECRET (full JSON credentials)
+  - GH_ACCESS_TOKEN (GitHub PAT for GHCR)
 
 ## 🎯 What You Need to Do
 
-### 1. Add Missing GitHub Secrets (5 minutes)
+### 1. Verify GitHub Secrets ✅
+
+**All required secrets are already configured!**
 
 Go to: https://github.com/subasico/portfolioanalyzerbackend/settings/secrets/actions
 
-Run these commands to get the values:
+Verify these exist:
+- ✅ **AKS_CLUSTER_NAME**
+- ✅ **AKS_RESOURCE_GROUP**
+- ✅ **AZURE_CLIENT_SECRET** (should be full JSON with clientId, clientSecret, subscriptionId, tenantId)
+- ✅ **GH_ACCESS_TOKEN**
 
+If `AZURE_CLIENT_SECRET` needs to be updated to the JSON format:
 ```bash
-# Get your service principal info (or create new one)
 az ad sp create-for-rbac --name "github-actions-portfolio-analyzer" \
   --role contributor \
-  --scopes /subscriptions/{your-subscription-id}/resourceGroups/{your-resource-group}
-
-# This will output JSON with these values:
-# - appId → use for AZURE_CLIENT_ID
-# - password → use for AZURE_CLIENT_SECRET (if you need to update it)
-# - tenant → use for AZURE_TENANT_ID
-
-# Get subscription ID
-az account show --query id -o tsv
-# → use for AZURE_SUBSCRIPTION_ID
+  --scopes /subscriptions/{subscription-id}/resourceGroups/{resource-group} \
+  --sdk-auth
+# Copy the entire JSON output to AZURE_CLIENT_SECRET
 ```
-
-Add these secrets in GitHub:
-- **AZURE_CLIENT_ID** - From appId above
-- **AZURE_SUBSCRIPTION_ID** - From command above
-- **AZURE_TENANT_ID** - From tenant above
 
 ### 2. Create Kubernetes Secrets (10 minutes)
 

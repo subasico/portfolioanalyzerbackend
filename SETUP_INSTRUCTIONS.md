@@ -12,37 +12,41 @@
 
 Go to https://github.com/subasico/portfolioanalyzerbackend/settings/secrets/actions
 
-### Required Secrets (some already configured):
+### Required Secrets:
 
 ✅ **AKS_CLUSTER_NAME** - Already configured
 ✅ **AKS_RESOURCE_GROUP** - Already configured
-✅ **AZURE_CLIENT_SECRET** - Already configured
+✅ **AZURE_CLIENT_SECRET** - Already configured (full JSON credentials)
+✅ **GH_ACCESS_TOKEN** - Already configured (GitHub Personal Access Token)
 
-### Additional Secrets Needed:
+### Verify AZURE_CLIENT_SECRET Format:
 
-1. **AZURE_CLIENT_ID**: Your Azure service principal client ID
-   ```bash
-   # Get from your service principal or create new one:
-   az ad sp create-for-rbac --name "github-actions-portfolio-analyzer" \
-     --role contributor \
-     --scopes /subscriptions/{subscription-id}/resourceGroups/{resource-group}
+The `AZURE_CLIENT_SECRET` should be the full JSON output from the service principal creation:
 
-   # Use the "appId" value as AZURE_CLIENT_ID
-   ```
+```json
+{
+  "clientId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+  "clientSecret": "your-secret-here",
+  "subscriptionId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+  "tenantId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+  "activeDirectoryEndpointUrl": "https://login.microsoftonline.com",
+  "resourceManagerEndpointUrl": "https://management.azure.com/",
+  "activeDirectoryGraphResourceId": "https://graph.windows.net/",
+  "sqlManagementEndpointUrl": "https://management.core.windows.net:8443/",
+  "galleryEndpointUrl": "https://gallery.azure.com/",
+  "managementEndpointUrl": "https://management.core.windows.net/"
+}
+```
 
-2. **AZURE_SUBSCRIPTION_ID**: Your Azure subscription ID
-   ```bash
-   # Get subscription ID:
-   az account show --query id -o tsv
-   ```
+If you need to create or recreate it:
+```bash
+az ad sp create-for-rbac --name "github-actions-portfolio-analyzer" \
+  --role contributor \
+  --scopes /subscriptions/{subscription-id}/resourceGroups/{resource-group} \
+  --sdk-auth
+```
 
-3. **AZURE_TENANT_ID**: Your Azure tenant ID
-   ```bash
-   # Get tenant ID:
-   az account show --query tenantId -o tsv
-   ```
-
-Note: The workflow now uses **GitHub Container Registry (GHCR)** instead of Azure Container Registry, so no ACR credentials are needed!
+**That's it!** No other Azure secrets needed. The workflow uses GitHub Container Registry (GHCR) instead of ACR.
 
 ## ✅ Step 4: Configuration Files
 

@@ -148,10 +148,16 @@ Health check endpoint.
 
 - `AKS_CLUSTER_NAME`: Your Azure Kubernetes Service cluster name
 - `AKS_RESOURCE_GROUP`: Your Azure resource group name
-- `AZURE_CLIENT_ID`: Azure service principal client ID
-- `AZURE_CLIENT_SECRET`: Azure service principal client secret
-- `AZURE_SUBSCRIPTION_ID`: Your Azure subscription ID
-- `AZURE_TENANT_ID`: Your Azure tenant ID
+- `AZURE_CLIENT_SECRET`: Azure service principal credentials (full JSON format)
+- `GH_ACCESS_TOKEN`: GitHub Personal Access Token with `packages:write` scope
+
+The `AZURE_CLIENT_SECRET` should contain the full JSON output from:
+```bash
+az ad sp create-for-rbac --name "github-actions-portfolio-analyzer" \
+  --role contributor \
+  --scopes /subscriptions/{subscription-id}/resourceGroups/{resource-group} \
+  --sdk-auth
+```
 
 ### Kubernetes Secrets
 
