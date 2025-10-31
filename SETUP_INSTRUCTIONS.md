@@ -1,81 +1,68 @@
 # Setup Instructions for Portfolio Analyzer Backend
 
-## Step 1: Create GitHub Repository
+## ✅ Step 1: Create GitHub Repository
 
-Since `gh` CLI is not available, create the repository manually:
+**COMPLETED** - Repository created at https://github.com/subasico/portfolioanalyzerbackend
 
-1. Go to https://github.com/new
-2. Repository name: `portfolioanalyzerbackend`
-3. Description: `AI-powered portfolio analysis microservice built with FastAPI and deployed on Azure Kubernetes Service`
-4. Visibility: Public
-5. **DO NOT** initialize with README, .gitignore, or license (we already have these)
-6. Click "Create repository"
+## ✅ Step 2: Push to GitHub
 
-## Step 2: Push to GitHub
-
-After creating the repository, run these commands:
-
-```bash
-cd /Users/coskun.subasi/Library/CloudStorage/Dropbox/Repository/portfolioanalyzerbackend
-git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/portfolioanalyzerbackend.git
-git push -u origin main
-```
-
-Replace `YOUR_USERNAME` with your GitHub username.
+**COMPLETED** - Code has been pushed to GitHub
 
 ## Step 3: Configure GitHub Secrets
 
-Go to your repository Settings > Secrets and variables > Actions, and add:
+Go to https://github.com/subasico/portfolioanalyzerbackend/settings/secrets/actions
 
-### Required Secrets:
+### Required Secrets (some already configured):
 
-1. **ACR_USERNAME**: Your Azure Container Registry username
+✅ **AKS_CLUSTER_NAME** - Already configured
+✅ **AKS_RESOURCE_GROUP** - Already configured
+✅ **AZURE_CLIENT_SECRET** - Already configured
+
+### Additional Secrets Needed:
+
+1. **AZURE_CLIENT_ID**: Your Azure service principal client ID
    ```bash
-   # Get from Azure Portal or run:
-   az acr credential show --name YOUR_ACR_NAME --query username
-   ```
-
-2. **ACR_PASSWORD**: Your Azure Container Registry password
-   ```bash
-   # Get from Azure Portal or run:
-   az acr credential show --name YOUR_ACR_NAME --query "passwords[0].value"
-   ```
-
-3. **AZURE_CREDENTIALS**: Azure service principal credentials (JSON format)
-   ```bash
-   # Create service principal:
+   # Get from your service principal or create new one:
    az ad sp create-for-rbac --name "github-actions-portfolio-analyzer" \
      --role contributor \
-     --scopes /subscriptions/{subscription-id}/resourceGroups/{resource-group} \
-     --sdk-auth
+     --scopes /subscriptions/{subscription-id}/resourceGroups/{resource-group}
 
-   # Copy the entire JSON output to this secret
+   # Use the "appId" value as AZURE_CLIENT_ID
    ```
 
-## Step 4: Update Configuration Files
+2. **AZURE_SUBSCRIPTION_ID**: Your Azure subscription ID
+   ```bash
+   # Get subscription ID:
+   az account show --query id -o tsv
+   ```
 
-### 4.1 Update `.github/workflows/deploy.yaml`
+3. **AZURE_TENANT_ID**: Your Azure tenant ID
+   ```bash
+   # Get tenant ID:
+   az account show --query tenantId -o tsv
+   ```
 
-Replace placeholders with your actual values:
-- `YOUR_ACR_NAME` → Your Azure Container Registry name
-- `YOUR_AKS_CLUSTER_NAME` → Your AKS cluster name
-- `YOUR_RESOURCE_GROUP` → Your Azure resource group
+Note: The workflow now uses **GitHub Container Registry (GHCR)** instead of Azure Container Registry, so no ACR credentials are needed!
 
-### 4.2 Update `k8s/deployment.yaml`
+## ✅ Step 4: Configuration Files
 
-Replace:
-- `YOUR_ACR_NAME` → Your Azure Container Registry name
+**COMPLETED** - All configuration files have been updated to use GitHub Container Registry (GHCR).
+
+- ✅ `.github/workflows/deploy.yaml` configured to use GHCR
+- ✅ `k8s/deployment.yaml` configured to pull from `ghcr.io/subasico/portfolioanalyzerbackend`
+- ✅ Using GitHub secrets for AKS cluster and resource group
 
 ## Step 5: Create Kubernetes Secrets
 
 Before deploying, create the required secrets in your AKS cluster:
 
-```bash
-# Connect to your AKS cluster
-az aks get-credentials --resource-group YOUR_RESOURCE_GROUP --name YOUR_AKS_CLUSTER_NAME
+**5.1: Application Secrets**
 
-# Create the secret
+```bash
+# Connect to your AKS cluster (use your actual cluster name and resource group)
+az aks get-credentials --resource-group <YOUR_RESOURCE_GROUP> --name <YOUR_AKS_CLUSTER_NAME>
+
+# Create the application secrets
 kubectl create secret generic portfolio-analyzer-secrets \
   --from-literal=database-url='postgresql://user:password@postgres-service:5432/portfoliodb' \
   --from-literal=anthropic-api-key='your_anthropic_api_key_here' \
@@ -83,6 +70,32 @@ kubectl create secret generic portfolio-analyzer-secrets \
 
 # Verify the secret was created
 kubectl get secrets
+```
+
+**5.2: GitHub Container Registry Pull Secret**
+
+Create a GitHub Personal Access Token (PAT):
+1. Go to https://github.com/settings/tokens/new
+2. Name: "AKS Portfolio Analyzer"
+3. Select scope: `read:packages`
+4. Click "Generate token"
+5. Copy the token (you won't see it again!)
+
+Then create the pull secret:
+
+```bash
+# Option 1: Using the helper script
+./k8s/create-ghcr-secret.sh subasico <YOUR_GITHUB_TOKEN>
+
+# Option 2: Manually
+kubectl create secret docker-registry ghcr-secret \
+  --docker-server=ghcr.io \
+  --docker-username=subasico \
+  --docker-password=<YOUR_GITHUB_TOKEN> \
+  --docker-email=subasico@users.noreply.github.com
+
+# Verify
+kubectl get secret ghcr-secret
 ```
 
 ## Step 6: Set Up Database (if using PostgreSQL)

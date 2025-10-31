@@ -140,20 +140,24 @@ Health check endpoint.
 ### Prerequisites
 
 - Azure account with AKS cluster
-- Azure Container Registry (ACR)
 - kubectl configured for your cluster
+- GitHub Personal Access Token with `packages:read` scope
 - GitHub repository secrets configured
 
 ### Required GitHub Secrets
 
-- `ACR_USERNAME`: Azure Container Registry username
-- `ACR_PASSWORD`: Azure Container Registry password
-- `AZURE_CREDENTIALS`: Azure service principal credentials
+- `AKS_CLUSTER_NAME`: Your Azure Kubernetes Service cluster name
+- `AKS_RESOURCE_GROUP`: Your Azure resource group name
+- `AZURE_CLIENT_ID`: Azure service principal client ID
+- `AZURE_CLIENT_SECRET`: Azure service principal client secret
+- `AZURE_SUBSCRIPTION_ID`: Your Azure subscription ID
+- `AZURE_TENANT_ID`: Your Azure tenant ID
 
 ### Kubernetes Secrets
 
 Create secrets in your AKS cluster:
 
+**1. Application Secrets:**
 ```bash
 kubectl create secret generic portfolio-analyzer-secrets \
   --from-literal=database-url='postgresql://user:password@postgres-service:5432/portfoliodb' \
@@ -161,15 +165,30 @@ kubectl create secret generic portfolio-analyzer-secrets \
   --from-literal=openai-api-key='your_openai_api_key'
 ```
 
-### Update Configuration
+**2. GitHub Container Registry Pull Secret:**
 
-1. Update `k8s/deployment.yaml`:
-   - Replace `YOUR_ACR_NAME` with your ACR name
+First, create a GitHub Personal Access Token (PAT) with `read:packages` scope:
+- Go to https://github.com/settings/tokens/new
+- Select scope: `read:packages`
+- Generate token
 
-2. Update `.github/workflows/deploy.yaml`:
-   - Set `ACR_NAME`
-   - Set `AKS_CLUSTER_NAME`
-   - Set `AKS_RESOURCE_GROUP`
+Then create the pull secret:
+```bash
+# Using the helper script
+./k8s/create-ghcr-secret.sh <your-github-username> <your-github-token>
+
+# Or manually
+kubectl create secret docker-registry ghcr-secret \
+  --docker-server=ghcr.io \
+  --docker-username=<your-github-username> \
+  --docker-password=<your-github-token> \
+  --docker-email=<your-email>
+```
+
+### Configuration
+
+All configuration is already set up to use GitHub Container Registry (GHCR).
+No additional configuration needed - just ensure your GitHub secrets are set correctly.
 
 ### Deploy
 
