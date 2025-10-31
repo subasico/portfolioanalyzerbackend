@@ -45,11 +45,16 @@ spec:
             secretKeyRef:
               name: portfolio-analyzer-secrets
               key: openai-api-key
+        - name: ANTHROPIC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: portfolio-analyzer-secrets
+              key: anthropic-api-key
               optional: true
         - name: LLM_PROVIDER
-          value: "anthropic"
+          value: "openai"
         - name: LLM_MODEL
-          value: "claude-3-5-sonnet-20241022"
+          value: "gpt-4o"
         resources:
           requests:
             memory: "512Mi"
