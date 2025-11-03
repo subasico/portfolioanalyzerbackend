@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, validator
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Any
 from datetime import datetime
 
 
@@ -46,13 +46,13 @@ class PortfolioAnalysis(BaseModel):
     """Complete portfolio analysis response"""
     request_id: str
     timestamp: datetime
-    portfolio_summary: Dict[str, any]
+    portfolio_summary: Dict[str, Any]
     sector_breakdown: List[SectorBreakdown]
     risk_metrics: RiskMetrics
     diversification_analysis: str
     recommendations: List[str]
     ai_insights: str
-    stock_details: Optional[List[Dict]] = None
+    stock_details: Optional[List[Dict[str, Any]]] = None
 
 
 class HealthCheckResponse(BaseModel):
